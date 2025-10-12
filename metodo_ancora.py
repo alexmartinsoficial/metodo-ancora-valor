@@ -1,6 +1,7 @@
 import streamlit as st
 from PIL import Image, ImageDraw, ImageFont
 import io
+import textwrap
 
 # Configuração da página
 st.set_page_config(
@@ -82,6 +83,9 @@ if 'dados' not in st.session_state:
     st.session_state.dados = {}
 if 'moedas_selecionadas' not in st.session_state:
     st.session_state.moedas_selecionadas = {}
+
+if 'imagem_gerada' not in st.session_state:
+    st.session_state.imagem_gerada = None
 
 # Header
 st.markdown("""
@@ -234,10 +238,192 @@ elif st.session_state.etapa == 3:
 
 # ETAPA 4: Resultado
 elif st.session_state.etapa == 4:
+    
+    # Função para gerar imagem
+    def gerar_imagem_resultado():
+        # Dimensões otimizadas para celular (1080px largura)
+        width = 1080
+        margin = 60
+        content_width = width - (margin * 2)
+        
+        # Criar imagem com fundo gradiente
+        img = Image.new('RGB', (width, 2400), color='white')
+        draw = ImageDraw.Draw(img)
+        
+        # Gradiente de fundo (simplificado - azul claro)
+        for i in range(width):
+            for j in range(2400):
+                r = int(235 + (224 - 235) * (i / width))
+                g = int(244 + (231 - 244) * (i / width))
+                b = int(255 + (255 - 255) * (i / width))
+                draw.point((i, j), fill=(r, g, b))
+        
+        y_pos = 80
+        
+        # Função para texto com quebra de linha
+        def draw_wrapped_text(text, y, font_size, color, max_width, bold=False):
+            try:
+                font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", font_size) if bold else ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", font_size)
+            except:
+                font = ImageFont.load_default()
+            
+            words = text.split(' ')
+            lines = []
+            current_line = []
+            
+            for word in words:
+                test_line = ' '.join(current_line + [word])
+                bbox = draw.textbbox((0, 0), test_line, font=font)
+                if bbox[2] - bbox[0] <= max_width:
+                    current_line.append(word)
+                else:
+                    if current_line:
+                        lines.append(' '.join(current_line))
+                    current_line = [word]
+            if current_line:
+                lines.append(' '.join(current_line))
+            
+            current_y = y
+            for line in lines:
+                bbox = draw.textbbox((0, 0), line, font=font)
+                text_width = bbox[2] - bbox[0]
+                x = margin + (content_width - text_width) // 2
+                draw.text((x, current_y), line, fill=color, font=font)
+                current_y += font_size + 10
+            
+            return current_y
+        
+        # Cabeçalho
+        y_pos = draw_wrapped_text("Plano de Negociação", y_pos, 70, (31, 41, 55), content_width, bold=True)
+        y_pos = draw_wrapped_text(st.session_state.dados['profissao'], y_pos + 10, 40, (107, 114, 128), content_width)
+        
+        y_pos += 60
+        
+        # Box Oferta Principal
+        box_height = 220
+        draw.rounded_rectangle([(margin, y_pos), (width - margin, y_pos + box_height)], radius=20, fill=(79, 70, 229))
+        
+        try:
+            font_label = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 28)
+            font_title = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 50)
+            font_price = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 70)
+        except:
+            font_label = ImageFont.load_default()
+            font_title = ImageFont.load_default()
+            font_price = ImageFont.load_default()
+        
+        draw.text((margin + 30, y_pos + 30), "OFERTA PRINCIPAL", fill=(200, 200, 255), font=font_label)
+        
+        # Texto da oferta com quebra
+        oferta_y = y_pos + 75
+        oferta_lines = textwrap.wrap(st.session_state.dados['oferta_principal'], width=25)
+        for line in oferta_lines:
+            draw.text((margin + 30, oferta_y), line, fill='white', font=font_title)
+            oferta_y += 55
+        
+        draw.text((margin + 30, y_pos + box_height - 90), st.session_state.dados['preco_principal'], fill='white', font=font_price)
+        
+        y_pos += box_height + 40
+        
+        # Box Oferta Âncora
+        box_height = 280
+        draw.rounded_rectangle([(margin, y_pos), (width - margin, y_pos + box_height)], radius=20, fill=(59, 130, 246))
+        
+        draw.text((margin + 30, y_pos + 30), "OFERTA ÂNCORA", fill=(200, 230, 255), font=font_label)
+        
+        ancora_y = y_pos + 75
+        ancora_lines = textwrap.wrap(st.session_state.dados['nome_ancora'], width=25)
+        for line in ancora_lines:
+            draw.text((margin + 30, ancora_y), line, fill='white', font=font_title)
+            ancora_y += 55
+        
+        # Boxes internos
+        box_interno_y = ancora_y + 20
+        box_width = (content_width - 40) // 2
+        
+        try:
+            font_small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 32)
+            font_medium = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 36)
+        except:
+            font_small = ImageFont.load_default()
+            font_medium = ImageFont.load_default()
+        
+        # Box Preço
+        draw.rounded_rectangle([(margin + 30, box_interno_y), (margin + 30 + box_width, box_interno_y + 100)], radius=15, fill=(255, 255, 255, 50))
+        draw.text((margin + 50, box_interno_y + 20), "Preço", fill='white', font=font_small)
+        draw.text((margin + 50, box_interno_y + 55), f"{st.session_state.dados['preco_min']} - {st.session_state.dados['preco_max']}", fill='white', font=font_medium)
+        
+        # Box Parcelamento
+        draw.rounded_rectangle([(margin + 50 + box_width, box_interno_y), (width - margin - 30, box_interno_y + 100)], radius=15, fill=(255, 255, 255, 50))
+        draw.text((margin + 70 + box_width, box_interno_y + 20), "Parcelamento", fill='white', font=font_small)
+        draw.text((margin + 70 + box_width, box_interno_y + 55), f"{st.session_state.dados['parc_min']} - {st.session_state.dados['parc_max']}", fill='white', font=font_medium)
+        
+        y_pos += box_height + 40
+        
+        # Box Moedas
+        moedas_list = list(st.session_state.moedas_selecionadas.items())
+        moedas_height = 100 + len(moedas_list) * 130
+        
+        draw.rounded_rectangle([(margin, y_pos), (width - margin, y_pos + moedas_height)], radius=20, fill=(249, 250, 251))
+        
+        try:
+            font_moeda_title = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 42)
+            font_moeda_nome = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 36)
+            font_moeda_desc = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 32)
+        except:
+            font_moeda_title = ImageFont.load_default()
+            font_moeda_nome = ImageFont.load_default()
+            font_moeda_desc = ImageFont.load_default()
+        
+        draw.text((margin + 30, y_pos + 30), "Concessões Disponíveis", fill=(31, 41, 55), font=font_moeda_title)
+        
+        moeda_y = y_pos + 90
+        for moeda_nome, moeda_desc in moedas_list:
+            # Box branco individual
+            draw.rounded_rectangle([(margin + 30, moeda_y), (width - margin - 30, moeda_y + 110)], radius=15, fill='white')
+            draw.line([(margin + 30, moeda_y), (margin + 30, moeda_y + 110)], fill=(79, 70, 229), width=8)
+            
+            draw.text((margin + 60, moeda_y + 15), moeda_nome, fill=(31, 41, 55), font=font_moeda_nome)
+            
+            # Descrição com quebra
+            desc_lines = textwrap.wrap(moeda_desc, width=45)
+            desc_y = moeda_y + 55
+            for line in desc_lines[:2]:  # Máximo 2 linhas
+                draw.text((margin + 60, desc_y), line, fill=(107, 114, 128), font=font_moeda_desc)
+                desc_y += 35
+            
+            moeda_y += 130
+        
+        y_pos += moedas_height + 40
+        
+        # Box Roteiro
+        roteiro_height = 300
+        draw.rounded_rectangle([(margin, y_pos), (width - margin, y_pos + roteiro_height)], radius=20, fill=(255, 251, 235))
+        
+        draw.text((margin + 30, y_pos + 30), "💡 Roteiro de Negociação", fill=(31, 41, 55), font=font_moeda_title)
+        
+        roteiro_items = [
+            "1. Apresente a Oferta Principal",
+            "2. Se houver resistência, introduza a Âncora",
+            "3. Use concessões, nunca desconto",
+            "4. Mantenha o preço principal intacto"
+        ]
+        
+        roteiro_y = y_pos + 90
+        for item in roteiro_items:
+            draw.text((margin + 60, roteiro_y), item, fill=(55, 65, 81), font=font_moeda_desc)
+            roteiro_y += 50
+        
+        # Ajustar altura final da imagem
+        final_height = y_pos + roteiro_height + 80
+        img_final = img.crop((0, 0, width, final_height))
+        
+        return img_final
+    
     st.markdown("""
     <div class="success-box">
         <h3 style="color: #065F46; margin-bottom: 0.5rem;">✓ Plano Gerado com Sucesso!</h3>
-        <p style="color: #047857;">Tire um print da tela ou salve a imagem abaixo</p>
+        <p style="color: #047857;">Visualize abaixo e clique para gerar a imagem</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -312,13 +498,45 @@ elif st.session_state.etapa == 4:
         st.markdown("---")
     
     # Botões
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("🔄 Criar Nova Estratégia", use_container_width=True):
-            st.session_state.etapa = 1
-            st.session_state.dados = {}
-            st.session_state.moedas_selecionadas = {}
-            st.rerun()
-    
-    with col2:
-        st.info("💡 Dica: Tire um print dessa tela para salvar seu plano!")
+    if st.session_state.imagem_gerada is None:
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("🔄 Criar Nova Estratégia", use_container_width=True):
+                st.session_state.etapa = 1
+                st.session_state.dados = {}
+                st.session_state.moedas_selecionadas = {}
+                st.session_state.imagem_gerada = None
+                st.rerun()
+        
+        with col2:
+            if st.button("📸 Gerar Imagem JPEG", type="primary", use_container_width=True):
+                with st.spinner("Gerando imagem otimizada para celular..."):
+                    img = gerar_imagem_resultado()
+                    
+                    # Converter para JPEG
+                    buf = io.BytesIO()
+                    img.save(buf, format='JPEG', quality=95)
+                    buf.seek(0)
+                    
+                    st.session_state.imagem_gerada = buf.getvalue()
+                    st.rerun()
+    else:
+        st.success("✅ Imagem gerada! Clique com botão direito e escolha 'Salvar imagem como...'")
+        st.image(st.session_state.imagem_gerada, use_container_width=True)
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.download_button(
+                label="⬇️ Baixar Imagem",
+                data=st.session_state.imagem_gerada,
+                file_name=f"plano-negociacao-{st.session_state.dados['profissao'].lower().replace(' ', '-')}.jpg",
+                mime="image/jpeg",
+                use_container_width=True
+            )
+        with col2:
+            if st.button("🔄 Criar Nova Estratégia", use_container_width=True):
+                st.session_state.etapa = 1
+                st.session_state.dados = {}
+                st.session_state.moedas_selecionadas = {}
+                st.session_state.imagem_gerada = None
+                st.rerun()
