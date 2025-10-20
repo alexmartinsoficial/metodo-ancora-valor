@@ -199,11 +199,6 @@ if st.session_state.etapa == 1:
         label_visibility='collapsed'
     )
     
-    # Mostrar exemplo se profissão selecionada
-    if profissao != 'Selecione...' and profissao in EXEMPLOS_PROFISSAO:
-        exemplo = EXEMPLOS_PROFISSAO[profissao]
-        mostrar_exemplo(f"{profissao} - {exemplo['oferta_principal']} por {exemplo['preco_principal']}")
-    
     st.markdown("---")
     
     # Oferta Principal
@@ -215,6 +210,11 @@ if st.session_state.etapa == 1:
         key='oferta_input',
         label_visibility='collapsed'
     )
+    
+    # Mostrar exemplo DEPOIS que digitar algo
+    if oferta_principal and profissao != 'Selecione...' and profissao in EXEMPLOS_PROFISSAO:
+        exemplo = EXEMPLOS_PROFISSAO[profissao]
+        mostrar_exemplo(f"{profissao} - {exemplo['oferta_principal']} por {exemplo['preco_principal']}")
     
     # Preço Principal
     st.markdown("**Preço da Oferta Principal**")
@@ -242,15 +242,16 @@ if st.session_state.etapa == 1:
 elif st.session_state.etapa == 2:
     st.subheader("🎯 Sua Oferta Âncora")
     
-    # Mostrar exemplo da profissão
+    # Nome da Âncora
+    st.markdown("**Nome da Oferta Âncora**")
+    mostrar_tooltip(TOOLTIPS['ancora'])
+    
+    # Mostrar exemplo ABAIXO do tooltip
     profissao = st.session_state.dados.get('profissao', '')
     if profissao in EXEMPLOS_PROFISSAO:
         exemplo = EXEMPLOS_PROFISSAO[profissao]
         mostrar_exemplo(f"{exemplo['ancora']} - {exemplo['ancora_exemplo']}")
     
-    # Nome da Âncora
-    st.markdown("**Nome da Oferta Âncora**")
-    mostrar_tooltip(TOOLTIPS['ancora'])
     nome_ancora = st.text_input(
         "Digite o nome da âncora",
         placeholder="Ex: Kit de Manutenção do Clareamento",
@@ -365,12 +366,10 @@ elif st.session_state.etapa == 3:
     # Contador de moedas selecionadas
     num_moedas = len(st.session_state.moedas_selecionadas)
     if num_moedas > 0:
-        cor = "green" if 3 <= num_moedas <= 5 else "orange" if num_moedas < 3 else "red"
+        cor = "green" if 1 <= num_moedas <= 3 else "orange"
         st.markdown(f"**Moedas selecionadas:** :{cor}[{num_moedas}]")
-        if num_moedas < 3:
-            st.warning("⚠️ Você tem poucas opções. Recomendamos pelo menos 3 moedas.")
-        elif num_moedas > 5:
-            st.warning("⚠️ Muitas opções podem confundir. Considere reduzir para 3-5 moedas.")
+        if num_moedas > 3:
+            st.warning("⚠️ Muitas opções podem confundir. Considere reduzir para 1-3 moedas.")
     
     col_back, col_space, col_next = st.columns([1, 1, 1])
     with col_back:
@@ -399,7 +398,7 @@ elif st.session_state.etapa == 4:
         img = Image.new('RGB', (width, 2400), color='white')
         draw = ImageDraw.Draw(img)
         
-        # Gradiente de fundo (simplificado - azul claro)
+        # Gradiente de fundo
         for i in range(width):
             for j in range(2400):
                 r = int(235 + (224 - 235) * (i / width))
@@ -409,68 +408,60 @@ elif st.session_state.etapa == 4:
         
         y_pos = 80
         
-        # Função para texto com quebra de linha
-        def draw_wrapped_text(text, y, font_size, color, max_width, bold=False):
-            try:
-                font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", font_size) if bold else ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", font_size)
-            except:
-                font = ImageFont.load_default()
-            
-            words = text.split(' ')
-            lines = []
-            current_line = []
-            
-            for word in words:
-                test_line = ' '.join(current_line + [word])
-                bbox = draw.textbbox((0, 0), test_line, font=font)
-                if bbox[2] - bbox[0] <= max_width:
-                    current_line.append(word)
-                else:
-                    if current_line:
-                        lines.append(' '.join(current_line))
-                    current_line = [word]
-            if current_line:
-                lines.append(' '.join(current_line))
-            
-            current_y = y
-            for line in lines:
-                bbox = draw.textbbox((0, 0), line, font=font)
-                text_width = bbox[2] - bbox[0]
-                x = margin + (content_width - text_width) // 2
-                draw.text((x, current_y), line, fill=color, font=font)
-                current_y += font_size + 10
-            
-            return current_y
-        
         # Cabeçalho
-        y_pos = draw_wrapped_text("Plano de Negociação", y_pos, 70, (31, 41, 55), content_width, bold=True)
-        y_pos = draw_wrapped_text(st.session_state.dados['profissao'], y_pos + 10, 40, (107, 114, 128), content_width)
+        try:
+            font_header = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 60)
+            font_subheader = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 35)
+        except:
+            font_header = ImageFont.load_default()
+            font_subheader = ImageFont.load_default()
         
-        y_pos += 60
+        # Centralizar cabeçalho
+        header_text = "Plano de Negociação"
+        bbox = draw.textbbox((0, 0), header_text, font=font_header)
+        header_width = bbox[2] - bbox[0]
+        header_x = (width - header_width) // 2
+        draw.text((header_x, y_pos), header_text, fill=(31, 41, 55), font=font_header)
+        
+        y_pos += 80
+        
+        # Profissão
+        prof_text = st.session_state.dados['profissao']
+        bbox = draw.textbbox((0, 0), prof_text, font=font_subheader)
+        prof_width = bbox[2] - bbox[0]
+        prof_x = (width - prof_width) // 2
+        draw.text((prof_x, y_pos), prof_text, fill=(107, 114, 128), font=font_subheader)
+        
+        y_pos += 70
+        
+        # Fontes para boxes
+        try:
+            font_label = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 26)
+            font_oferta_nome = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 42)
+            font_preco = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 55)
+            font_box_label = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 28)
+            font_box_value = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 30)
+        except:
+            font_label = ImageFont.load_default()
+            font_oferta_nome = ImageFont.load_default()
+            font_preco = ImageFont.load_default()
+            font_box_label = ImageFont.load_default()
+            font_box_value = ImageFont.load_default()
         
         # Box Oferta Principal
         box_height = 220
         draw.rounded_rectangle([(margin, y_pos), (width - margin, y_pos + box_height)], radius=20, fill=(79, 70, 229))
         
-        try:
-            font_label = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 28)
-            font_title = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 10)
-            font_price = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 30)
-        except:
-            font_label = ImageFont.load_default()
-            font_title = ImageFont.load_default()
-            font_price = ImageFont.load_default()
+        draw.text((margin + 30, y_pos + 25), "OFERTA PRINCIPAL", fill=(200, 200, 255), font=font_label)
         
-        draw.text((margin + 30, y_pos + 30), "OFERTA PRINCIPAL", fill=(200, 200, 255), font=font_label)
-        
-        # Texto da oferta com quebra
-        oferta_y = y_pos + 45
-        oferta_lines = textwrap.wrap(st.session_state.dados['oferta_principal'], width=25)
+        # Nome da oferta com quebra
+        oferta_y = y_pos + 70
+        oferta_lines = textwrap.wrap(st.session_state.dados['oferta_principal'], width=30)
         for line in oferta_lines:
-            draw.text((margin + 30, oferta_y), line, fill='white', font=font_title)
-            oferta_y += 55
+            draw.text((margin + 30, oferta_y), line, fill='white', font=font_oferta_nome)
+            oferta_y += 48
         
-        draw.text((margin + 30, y_pos + box_height - 90), st.session_state.dados['preco_principal'], fill='white', font=font_price)
+        draw.text((margin + 30, y_pos + box_height - 75), st.session_state.dados['preco_principal'], fill='white', font=font_preco)
         
         y_pos += box_height + 40
         
@@ -478,49 +469,42 @@ elif st.session_state.etapa == 4:
         box_height = 280
         draw.rounded_rectangle([(margin, y_pos), (width - margin, y_pos + box_height)], radius=20, fill=(59, 130, 246))
         
-        draw.text((margin + 30, y_pos + 30), "OFERTA ÂNCORA", fill=(200, 230, 255), font=font_label)
+        draw.text((margin + 30, y_pos + 25), "OFERTA ÂNCORA", fill=(200, 230, 255), font=font_label)
         
-        ancora_y = y_pos + 45
-        ancora_lines = textwrap.wrap(st.session_state.dados['nome_ancora'], width=25)
+        ancora_y = y_pos + 70
+        ancora_lines = textwrap.wrap(st.session_state.dados['nome_ancora'], width=30)
         for line in ancora_lines:
-            draw.text((margin + 30, ancora_y), line, fill='white', font=font_title)
-            ancora_y += 40
+            draw.text((margin + 30, ancora_y), line, fill='white', font=font_oferta_nome)
+            ancora_y += 48
         
         # Boxes internos
         box_interno_y = ancora_y + 20
         box_width = (content_width - 40) // 2
         
-        try:
-            font_small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 32)
-            font_medium = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 36)
-        except:
-            font_small = ImageFont.load_default()
-            font_medium = ImageFont.load_default()
-        
         # Box Preço
-        draw.rounded_rectangle([(margin + 30, box_interno_y), (margin + 30 + box_width, box_interno_y + 100)], radius=15, fill=(100, 150, 255))
-        draw.text((margin + 50, box_interno_y + 20), "Preço", fill='white', font=font_small)
-        draw.text((margin + 50, box_interno_y + 55), f"{st.session_state.dados['preco_min']} - {st.session_state.dados['preco_max']}", fill='white', font=font_medium)
+        draw.rounded_rectangle([(margin + 30, box_interno_y), (margin + 30 + box_width, box_interno_y + 95)], radius=15, fill=(150, 190, 255))
+        draw.text((margin + 50, box_interno_y + 18), "Preço", fill='white', font=font_box_label)
+        draw.text((margin + 50, box_interno_y + 52), f"{st.session_state.dados['preco_min']} - {st.session_state.dados['preco_max']}", fill='white', font=font_box_value)
         
         # Box Parcelamento
-        draw.rounded_rectangle([(margin + 50 + box_width, box_interno_y), (width - margin - 30, box_interno_y + 100)], radius=15, fill=(100, 150, 255))
-        draw.text((margin + 70 + box_width, box_interno_y + 20), "Parcelamento", fill='white', font=font_small)
-        draw.text((margin + 70 + box_width, box_interno_y + 55), f"{st.session_state.dados['parc_min']} - {st.session_state.dados['parc_max']}", fill='white', font=font_medium)
+        draw.rounded_rectangle([(margin + 50 + box_width, box_interno_y), (width - margin - 30, box_interno_y + 95)], radius=15, fill=(150, 190, 255))
+        draw.text((margin + 70 + box_width, box_interno_y + 18), "Parcelamento", fill='white', font=font_box_label)
+        draw.text((margin + 70 + box_width, box_interno_y + 52), f"{st.session_state.dados['parc_min']} - {st.session_state.dados['parc_max']}", fill='white', font=font_box_value)
         
         y_pos += box_height + 40
         
         # Box Moedas (ordenadas por prioridade)
         moedas_ordenadas = sorted(st.session_state.moedas_selecionadas.items(), 
                                   key=lambda x: x[1]['prioridade_index'])
-        moedas_height = 100 + len(moedas_ordenadas) * 150
+        moedas_height = 100 + len(moedas_ordenadas) * 140
         
         draw.rounded_rectangle([(margin, y_pos), (width - margin, y_pos + moedas_height)], radius=20, fill=(249, 250, 251))
         
         try:
-            font_moeda_title = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 42)
-            font_moeda_nome = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 36)
-            font_moeda_desc = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 32)
-            font_prioridade = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 28)
+            font_moeda_title = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 38)
+            font_moeda_nome = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 32)
+            font_moeda_desc = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 28)
+            font_prioridade = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 24)
         except:
             font_moeda_title = ImageFont.load_default()
             font_moeda_nome = ImageFont.load_default()
@@ -532,28 +516,28 @@ elif st.session_state.etapa == 4:
         moeda_y = y_pos + 90
         for moeda_nome, moeda_info in moedas_ordenadas:
             # Box branco individual
-            draw.rounded_rectangle([(margin + 30, moeda_y), (width - margin - 30, moeda_y + 130)], radius=15, fill='white')
-            draw.line([(margin + 30, moeda_y), (margin + 30, moeda_y + 130)], fill=(79, 70, 229), width=8)
+            draw.rounded_rectangle([(margin + 30, moeda_y), (width - margin - 30, moeda_y + 120)], radius=15, fill='white')
+            draw.line([(margin + 30, moeda_y), (margin + 30, moeda_y + 120)], fill=(79, 70, 229), width=8)
             
             # Prioridade badge
-            draw.rounded_rectangle([(margin + 60, moeda_y + 15), (margin + 200, moeda_y + 50)], radius=8, fill=(79, 70, 229))
-            draw.text((margin + 75, moeda_y + 20), moeda_info['prioridade'].split(' ')[0], fill='white', font=font_prioridade)
+            draw.rounded_rectangle([(margin + 60, moeda_y + 12), (margin + 180, moeda_y + 45)], radius=8, fill=(79, 70, 229))
+            draw.text((margin + 75, moeda_y + 17), moeda_info['prioridade'].split(' ')[0], fill='white', font=font_prioridade)
             
-            draw.text((margin + 220, moeda_y + 15), moeda_nome, fill=(31, 41, 55), font=font_moeda_nome)
+            draw.text((margin + 200, moeda_y + 12), moeda_nome, fill=(31, 41, 55), font=font_moeda_nome)
             
             # Descrição com quebra
-            desc_lines = textwrap.wrap(moeda_info['descricao'], width=45)
-            desc_y = moeda_y + 65
+            desc_lines = textwrap.wrap(moeda_info['descricao'], width=50)
+            desc_y = moeda_y + 55
             for line in desc_lines[:2]:  # Máximo 2 linhas
                 draw.text((margin + 60, desc_y), line, fill=(107, 114, 128), font=font_moeda_desc)
-                desc_y += 35
+                desc_y += 32
             
-            moeda_y += 150
+            moeda_y += 140
         
         y_pos += moedas_height + 40
         
         # Box Roteiro
-        roteiro_height = 300
+        roteiro_height = 280
         draw.rounded_rectangle([(margin, y_pos), (width - margin, y_pos + roteiro_height)], radius=20, fill=(255, 251, 235))
         
         draw.text((margin + 30, y_pos + 30), "💡 Roteiro de Negociação", fill=(31, 41, 55), font=font_moeda_title)
