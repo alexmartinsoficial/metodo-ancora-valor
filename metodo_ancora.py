@@ -339,8 +339,8 @@ elif st.session_state.etapa == 3:
             
             if usar:
                 descricao = st.text_area(
-                    "Qual será sua concessão e como você aplicará?",
-                    placeholder=f"Descreva sua concessão + como você aplicará: {moeda.lower()}",
+                    "Qual será sua concessão?",
+                    placeholder=f"Descreva sua concessão": {moeda.lower()}",
                     key=f'desc_{i}',
                     value=st.session_state.moedas_selecionadas.get(moeda, {}).get('descricao', ''),
                     height=80
