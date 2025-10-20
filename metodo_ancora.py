@@ -199,6 +199,11 @@ if st.session_state.etapa == 1:
         label_visibility='collapsed'
     )
     
+    # Mostrar exemplo logo após escolher profissão
+    if profissao != 'Selecione...' and profissao in EXEMPLOS_PROFISSAO:
+        exemplo = EXEMPLOS_PROFISSAO[profissao]
+        mostrar_exemplo(f"{profissao} - {exemplo['oferta_principal']} por {exemplo['preco_principal']}")
+    
     st.markdown("---")
     
     # Oferta Principal
@@ -210,11 +215,6 @@ if st.session_state.etapa == 1:
         key='oferta_input',
         label_visibility='collapsed'
     )
-    
-    # Mostrar exemplo DEPOIS que digitar algo
-    if oferta_principal and profissao != 'Selecione...' and profissao in EXEMPLOS_PROFISSAO:
-        exemplo = EXEMPLOS_PROFISSAO[profissao]
-        mostrar_exemplo(f"{profissao} - {exemplo['oferta_principal']} por {exemplo['preco_principal']}")
     
     # Preço Principal
     st.markdown("**Preço da Oferta Principal**")
