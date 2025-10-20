@@ -143,7 +143,7 @@ TOOLTIPS = {
     'preco_minimo': 'Quanto você PRECISA receber no mínimo para não ter prejuízo? Considere seus custos reais.',
     'preco_maximo': 'Preço ideal da âncora. Pode ser até 30-40% do valor da oferta principal.',
     'parcelamento': 'Quantas vezes você pode parcelar sem comprometer seu fluxo de caixa?',
-    'moedas': 'Concessões que você pode oferecer SEM dar desconto. Escolha 3 a 5 opções.',
+    'moedas': 'Concessões que você pode oferecer SEM dar desconto. Escolha 1 a 3 opções.',
     'prioridade': 'Defina a ordem: qual concessão você oferece primeiro, segunda, terceira...'
 }
 
@@ -325,7 +325,7 @@ elif st.session_state.etapa == 3:
     st.subheader("💰 Suas Moedas de Troca")
     
     mostrar_tooltip(TOOLTIPS['moedas'])
-    st.info("📊 **Recomendação:** Escolha entre 3 a 5 moedas de troca. Mais que isso pode confundir a negociação.")
+    st.info("📊 **Recomendação:** Escolha entre 1 a 3 moedas de troca. Mais que isso pode confundir a negociação.")
     
     mostrar_tooltip(TOOLTIPS['prioridade'])
     
