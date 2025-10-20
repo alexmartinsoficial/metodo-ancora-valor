@@ -2,6 +2,7 @@ import streamlit as st
 from PIL import Image, ImageDraw, ImageFont
 import io
 import textwrap
+from datetime import datetime, timedelta
 
 # Configuração da página
 st.set_page_config(
@@ -62,8 +63,131 @@ st.markdown("""
         font-size: 0.85rem;
         color: #065F46;
     }
+    .login-box {
+        max-width: 450px;
+        margin: 3rem auto;
+        padding: 2rem;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
 </style>
 """, unsafe_allow_html=True)
+
+# Função para carregar usuários do arquivo
+@st.cache_data(ttl=300)  # Cache por 5 minutos
+def carregar_usuarios():
+    try:
+        with open('usuarios.txt', 'r', encoding='utf-8') as f:
+            usuarios = {}
+            for linha in f:
+                linha = linha.strip()
+                if linha and ',' in linha:
+                    partes = linha.split(',')
+                    if len(partes) >= 3:
+                        email = partes[0].strip().lower()
+                        codigo = partes[1].strip()
+                        data_expiracao = partes[2].strip()
+                        usuarios[email] = {
+                            'codigo': codigo,
+                            'expiracao': data_expiracao
+                        }
+            return usuarios
+    except FileNotFoundError:
+        st.error("⚠️ Arquivo de usuários não encontrado. Contate o suporte.")
+        return {}
+
+# Função para validar acesso
+def validar_acesso(email, codigo):
+    usuarios = carregar_usuarios()
+    email = email.strip().lower()
+    codigo = codigo.strip()
+    
+    if email not in usuarios:
+        return False, "Acesso negado. Verifique seu email e código."
+    
+    if usuarios[email]['codigo'] != codigo:
+        return False, "Acesso negado. Verifique seu email e código."
+    
+    # Verificar data de expiração
+    try:
+        data_expiracao = datetime.strptime(usuarios[email]['expiracao'], '%Y-%m-%d')
+        if datetime.now() > data_expiracao:
+            return False, "Seu acesso expirou. Entre em contato com o suporte para renovar."
+    except:
+        return False, "Erro ao verificar validade do acesso. Contate o suporte."
+    
+    return True, "Acesso autorizado!"
+
+# Inicializar variáveis de sessão
+if 'autenticado' not in st.session_state:
+    st.session_state.autenticado = False
+if 'email_usuario' not in st.session_state:
+    st.session_state.email_usuario = ''
+if 'etapa' not in st.session_state:
+    st.session_state.etapa = 1
+if 'dados' not in st.session_state:
+    st.session_state.dados = {}
+if 'moedas_selecionadas' not in st.session_state:
+    st.session_state.moedas_selecionadas = {}
+if 'imagem_gerada' not in st.session_state:
+    st.session_state.imagem_gerada = None
+
+# TELA DE LOGIN
+if not st.session_state.autenticado:
+    st.markdown("""
+    <div class="main-header">
+        <div class="main-title">⚓ Método Âncora de Valor</div>
+        <div class="subtitle">Área de Acesso</div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown('<div class="login-box">', unsafe_allow_html=True)
+    
+    st.markdown("### 🔐 Faça seu login")
+    st.info("📧 O acesso será enviado pela equipe de atendimento após confirmação do pagamento")
+    
+    email_login = st.text_input(
+        "Email cadastrado",
+        placeholder="seu@email.com",
+        key="email_login"
+    )
+    
+    codigo_login = st.text_input(
+        "Código de acesso",
+        placeholder="Ex: ALN2847",
+        type="password",
+        key="codigo_login"
+    )
+    
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        if st.button("Acessar Ferramenta", type="primary", use_container_width=True):
+            if email_login and codigo_login:
+                valido, mensagem = validar_acesso(email_login, codigo_login)
+                if valido:
+                    st.session_state.autenticado = True
+                    st.session_state.email_usuario = email_login
+                    st.success(mensagem)
+                    st.rerun()
+                else:
+                    st.error(mensagem)
+            else:
+                st.warning("⚠️ Preencha email e código de acesso")
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    st.markdown("---")
+    st.markdown("""
+    <div style="text-align: center; color: #6B7280; font-size: 0.9rem;">
+        <p>💡 Acesso válido por 1 ano a partir da data de ativação</p>
+        <p>Problemas com o login? Entre em contato com o suporte</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.stop()
+
+# RESTO DO APLICATIVO (após login)
 
 # Lista de profissões
 PROFISSOES = [
