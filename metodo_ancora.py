@@ -498,7 +498,7 @@ elif st.session_state.etapa == 4:
             font_medium = ImageFont.load_default()
         
         # Box Preço
-        draw.rounded_rectangle([(margin + 30, box_interno_y), (margin + 30 + box_width, box_interno_y + 100)], radius=15, fill=(255, 255, 255, 50))
+        draw.rounded_rectangle([(margin + 50, box_interno_y), (margin + 30 + box_width, box_interno_y + 100)], radius=15, fill=(255, 255, 255, 50))
         draw.text((margin + 50, box_interno_y + 20), "Preço", fill='white', font=font_small)
         draw.text((margin + 50, box_interno_y + 55), f"{st.session_state.dados['preco_min']} - {st.session_state.dados['preco_max']}", fill='white', font=font_medium)
         
