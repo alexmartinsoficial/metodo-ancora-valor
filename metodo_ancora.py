@@ -464,7 +464,7 @@ elif st.session_state.etapa == 4:
         draw.text((margin + 30, y_pos + 30), "OFERTA PRINCIPAL", fill=(200, 200, 255), font=font_label)
         
         # Texto da oferta com quebra
-        oferta_y = y_pos + 75
+        oferta_y = y_pos + 45
         oferta_lines = textwrap.wrap(st.session_state.dados['oferta_principal'], width=25)
         for line in oferta_lines:
             draw.text((margin + 30, oferta_y), line, fill='white', font=font_title)
@@ -499,13 +499,13 @@ elif st.session_state.etapa == 4:
         
         # Box Preço
         draw.rounded_rectangle([(margin + 30, box_interno_y), (margin + 30 + box_width, box_interno_y + 100)], radius=15, fill=(100, 150, 255))
-        draw.text((margin + 50, box_interno_y + 20), "Preço", fill='white', font=font_small)
-        draw.text((margin + 50, box_interno_y + 55), f"{st.session_state.dados['preco_min']} - {st.session_state.dados['preco_max']}", fill='white', font=font_medium)
+        draw.text((margin + 35, box_interno_y + 20), "Preço", fill='white', font=font_small)
+        draw.text((margin + 35, box_interno_y + 35), f"{st.session_state.dados['preco_min']} - {st.session_state.dados['preco_max']}", fill='white', font=font_medium)
         
         # Box Parcelamento
-        draw.rounded_rectangle([(margin + 50 + box_width, box_interno_y), (width - margin - 30, box_interno_y + 100)], radius=15, fill=(255, 255, 255, 50))
-        draw.text((margin + 70 + box_width, box_interno_y + 20), "Parcelamento", fill='white', font=font_small)
-        draw.text((margin + 70 + box_width, box_interno_y + 55), f"{st.session_state.dados['parc_min']} - {st.session_state.dados['parc_max']}", fill='white', font=font_medium)
+        draw.rounded_rectangle([(margin + 35 + box_width, box_interno_y), (width - margin - 30, box_interno_y + 100)], radius=15, fill=(100, 150, 255))
+        draw.text((margin + 45 + box_width, box_interno_y + 20), "Parcelamento", fill='white', font=font_small)
+        draw.text((margin + 45 + box_width, box_interno_y + 55), f"{st.session_state.dados['parc_min']} - {st.session_state.dados['parc_max']}", fill='white', font=font_medium)
         
         y_pos += box_height + 40
         
