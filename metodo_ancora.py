@@ -339,8 +339,8 @@ elif st.session_state.etapa == 3:
             
             if usar:
                 descricao = st.text_area(
-                    "Como você vai aplicar essa concessão?",
-                    placeholder=f"Descreva como você aplicará: {moeda.lower()}",
+                    "Qual será sua bonificação e como você aplicará?",
+                    placeholder=f"Descreva sua bonificação + como você aplicará: {moeda.lower()}",
                     key=f'desc_{i}',
                     value=st.session_state.moedas_selecionadas.get(moeda, {}).get('descricao', ''),
                     height=80
@@ -348,7 +348,7 @@ elif st.session_state.etapa == 3:
                 
                 prioridade = st.selectbox(
                     "Prioridade (quando usar na negociação)",
-                    ['1ª opção (oferecer primeiro)', '2ª opção', '3ª opção', '4ª opção', '5ª opção', 'Última opção (só se necessário)'],
+                    ['1ª opção (oferecer primeiro)', '2ª opção', '3ª opção - Última opção (só se necessário)'],
                     key=f'prior_{i}',
                     index=st.session_state.moedas_selecionadas.get(moeda, {}).get('prioridade_index', 0) if moeda in st.session_state.moedas_selecionadas else 0
                 )
@@ -357,7 +357,7 @@ elif st.session_state.etapa == 3:
                     st.session_state.moedas_selecionadas[moeda] = {
                         'descricao': descricao,
                         'prioridade': prioridade,
-                        'prioridade_index': ['1ª opção (oferecer primeiro)', '2ª opção', '3ª opção', '4ª opção', '5ª opção', 'Última opção (só se necessário)'].index(prioridade)
+                        'prioridade_index': ['1ª opção (oferecer primeiro)', '2ª opção', '3ª opção - Última opção (só se necessário)'].index(prioridade)
                     }
             elif moeda in st.session_state.moedas_selecionadas:
                 del st.session_state.moedas_selecionadas[moeda]
