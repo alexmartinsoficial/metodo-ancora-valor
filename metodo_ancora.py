@@ -480,11 +480,11 @@ elif st.session_state.etapa == 4:
         
         draw.text((margin + 30, y_pos + 30), "OFERTA ÂNCORA", fill=(200, 230, 255), font=font_label)
         
-        ancora_y = y_pos + 75
+        ancora_y = y_pos + 45
         ancora_lines = textwrap.wrap(st.session_state.dados['nome_ancora'], width=25)
         for line in ancora_lines:
-            draw.text((margin + 30, ancora_y), line, fill='white', font=font_title)
-            ancora_y += 55
+            draw.text((margin + 15, ancora_y), line, fill='white', font=font_title)
+            ancora_y += 35
         
         # Boxes internos
         box_interno_y = ancora_y + 20
