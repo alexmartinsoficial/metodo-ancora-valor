@@ -200,7 +200,7 @@ PROFISSOES = [
     'Social Media',
     'Escola de Cursos Preparatórios',
     'Dentista',
-    'Ortopedista'
+    'Fisioterapeuta/clínico/pilates'
 ]
 
 # Exemplos por profissão
