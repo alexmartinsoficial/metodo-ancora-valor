@@ -142,8 +142,6 @@ if not st.session_state.autenticado:
     </div>
     """, unsafe_allow_html=True)
     
-    st.markdown('<div class="login-box">', unsafe_allow_html=True)
-    
     st.markdown("### 🔐 Faça seu login")
     st.info("📧 O acesso será enviado pela equipe de atendimento após confirmação do pagamento")
     
@@ -174,8 +172,6 @@ if not st.session_state.autenticado:
                     st.error(mensagem)
             else:
                 st.warning("⚠️ Preencha email e código de acesso")
-    
-    st.markdown('</div>', unsafe_allow_html=True)
     
     st.markdown("---")
     st.markdown("""
